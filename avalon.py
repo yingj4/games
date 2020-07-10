@@ -145,7 +145,7 @@ class Game():
             s = self.base_msg
             for i in range(self.quest_idx+1, 5):
                 s += '[{}*]'.format(self.quests_num[i]) if self.tolerance and i == 3 else '[{}]'.format(self.quests_num[i])
-                s += self.vote_msg
+            s += self.vote_msg
 
         self.msg = s
 
