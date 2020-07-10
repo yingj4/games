@@ -21,6 +21,11 @@
             {{ form.command(size=32) }}<br>
         </h1>
 
+        <h1>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}<br>
+        </h1>
+
         <h1>{{ form.submit() }}</h1>
     </form>
 {% endblock %}

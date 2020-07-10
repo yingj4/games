@@ -20,6 +20,7 @@ class ConfigForm(FlaskForm):
     tolerance = BooleanField('tolerance')
     quest = StringField('quest')
     command = StringField('command')
+    name = StringField('name')
     submit = SubmitField('Submit')
 
 class VoteForm(FlaskForm):
@@ -50,6 +51,7 @@ class Game():
         self.quest_idx = 0
         self.quests_num = []
         self.base_msg = ''
+        self.vote_msg = ''
         self.user_specific_msg = {}
 
     def add_user(self, name):
@@ -89,6 +91,7 @@ class Game():
         self.quest_idx = 0
         self.quests_num = [int(a.strip()) for a in quest.split(',')]
         self.base_msg = ''
+        self.vote_msg = ''
         self.user_specific_msg = {}
         self.user_attributes = {}
         self.roles = [(u'梅林'.encode('utf-8'), 0), (u'派西維爾'.encode('utf-8'), 1), (u'莫幹那'.encode('utf-8'), 2), (u'刺客'.encode('utf-8'), 3)]
@@ -121,14 +124,16 @@ class Game():
         if len(self.votes) == self.max_num:
             s = self.base_msg
             res = sum([1 if self.votes[a] else 0 for a in self.votes])
-            s = '[{}]'.format('Vote result is PASS' if res > len(self.votes)/2 else 'Vote result is FAIL')
-            s += ' | '
+            self.vote_msg = '[{}]'.format('Vote result is PASS' if res > len(self.votes)/2 else 'Vote result is FAIL')
+            self.vote_msg += ' | '
             for p in self.votes:
-                s += p
-                s += ' voted {}'.format('pass' if self.votes[p] else 'fail')
-                s += ' | '
+                self.vote_msg += p
+                self.vote_msg += ' voted {}'.format('pass' if self.votes[p] else 'fail')
+                self.vote_msg += ' | '
             self.votes = {}
             self.voting = False
+            self.vote_msg
+            s += self.vote_msg
 
         elif len(self.quests) == self.quests_num[self.quest_idx]:
             res = sum([0 if a else 1 for a in self.quests])
@@ -140,7 +145,7 @@ class Game():
             s = self.base_msg
             for i in range(self.quest_idx+1, 5):
                 s += '[{}*]'.format(self.quests_num[i]) if self.tolerance and i == 3 else '[{}]'.format(self.quests_num[i])
-
+                s += self.vote_msg
 
         self.msg = s
 
@@ -218,8 +223,9 @@ def conf():
         evil = int(form.evil.data)
         tolerance = form.tolerance.data
         quest = form.quest.data
+        uname = form.name.data
         game.config(civil, evil, tolerance, quest)
-        uid, role = game.add_user('Zeran')
+        uid, role = game.add_user(uname)
         return redirect('/play?uid={}'.format(uid))
     return render_template('config.html', title='Game', form=form)
 
