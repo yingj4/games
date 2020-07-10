@@ -136,7 +136,7 @@ class Game():
             self.votes = {}
             self.voting = False
             self.vote_msg
-            s += self.vote_msg
+            s += '<br>' + self.vote_msg
 
         elif len(self.quests) == self.quests_num[self.quest_idx]:
             res = sum([0 if a else 1 for a in self.quests])
