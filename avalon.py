@@ -39,6 +39,7 @@ class Game():
         self.msg = ''
         self.roles = []
         self.users = {}
+        self.user_attributes = {}
         self.max_num = 0
         self.count = 0
         self.tolerance = False
@@ -49,14 +50,31 @@ class Game():
         self.quest_idx = 0
         self.quests_num = []
         self.base_msg = ''
+        self.user_specific_msg = {}
 
     def add_user(self, name):
         if self.count == self.max_num:
             return None, None
-        ret = self.roles[0].decode('utf-8')
+        ret, attr = self.roles[0]
+        ret = ret.decode('utf-8')
         self.roles = self.roles[1:]
         self.count += 1
+            
         self.users[self.count] = (name, ret)
+        self.user_attributes[self.count] = attr
+
+        if self.count == self.max_num:
+            bad = [self.users[a][0] if (self.user_attributes[a] in [2, 3, 5]) else '' for a in self.user_attributes]
+            god = [self.users[a][0] if (self.user_attributes[a] in [0, 2]) else '' for a in self.user_attributes]
+            for p in self.users:
+                if self.user_attributes[p] == 0: # merlin
+                    self.user_specific_msg[p] = 'Bad players: ' + str(bad)
+                elif self.user_attributes[p] == 1: # parcevil
+                    self.user_specific_msg[p] = 'Possible Merlin: ' + str(god)
+                elif self.user_attributes[p] in [2, 3, 5]: # bad guys
+                    self.user_specific_msg[p] = 'Evil Mates: ' + str(bad)
+                else:
+                    pass
         return self.count, ret
 
 
@@ -71,11 +89,13 @@ class Game():
         self.quest_idx = 0
         self.quests_num = [int(a.strip()) for a in quest.split(',')]
         self.base_msg = ''
-        self.roles = [u'梅林'.encode('utf-8'), u'派西維爾'.encode('utf-8'), u'莫幹那'.encode('utf-8'), u'刺客'.encode('utf-8')]
+        self.user_specific_msg = {}
+        self.user_attributes = {}
+        self.roles = [(u'梅林'.encode('utf-8'), 0), (u'派西維爾'.encode('utf-8'), 1), (u'莫幹那'.encode('utf-8'), 2), (u'刺客'.encode('utf-8'), 3)]
         for i in range(civil):
-            self.roles.append(u'平民'.encode('utf-8'))
+            self.roles.append((u'平民'.encode('utf-8'), 4))
         for i in range(evil):
-            self.roles.append(u'壞人平民'.encode('utf-8'))
+            self.roles.append((u'壞人平民'.encode('utf-8'), 5))
         random.seed(datetime.now())
         random.shuffle(self.roles)
         print(self.roles)
@@ -124,8 +144,13 @@ class Game():
 
         self.msg = s
 
-    def get_game_msg(self):
-        return self.msg
+    def get_game_msg(self, uid):
+        s = ''
+        try:
+            s = self.user_specific_msg[uid]
+        except:
+            pass
+        return self.msg + '<br>' + s
     
 
     def to_string(self):
@@ -135,7 +160,7 @@ game = Game()
 
 @app.route('/')
 def home():
-    return '<a href="/login"> click here to login </a>'
+    return u'<h1>Please wait until host tells you to login. Username cannot be the same as other players. Host should login as admin. Please keep page open. Wechat floating window is supported. Host can re-login as admin to start next game.</h1><br><h1><a href="/login"> click here to login </a></h1><h1>Copyright © Zeran Zhu 2020, All rights reserved.</h1>'
 
 @app.route('/view_vote_result')
 def view_vote_result():
@@ -181,7 +206,7 @@ def show():
     uid = int(request.args.get('uid'))
     uname, role = game.users[uid]
 
-    return u'<h1>Online BoardGames</h1><h1>Copyright © Zeran Zhu 2020, All rights reserved.</h1><p>Welcome {}</p><p>You are player #{}</p><p>Your role is {}</p><p>{}</p><p><a href="/vote?uid={}">Vote!</a></p><p><a href="/quest?uid={}">Quest!</a></p>'.format(uname, uid, role, game.get_game_msg(), uid, uid)
+    return u'<h1>Online BoardGames</h1><h1>Copyright © Zeran Zhu 2020, All rights reserved.</h1><h2>Welcome {}</h2><h2>You are player #{}</h2><h2>Your role is {}</h2><h2>{}</h2><h2><a href="/vote?uid={}">Vote!</a></h2><h2><a href="/quest?uid={}">Quest!</a></h2><br><br><h2><a href="/play?uid={}">Refresh page</a></h2>'.format(uname, uid, role, game.get_game_msg(uid), uid, uid, uid)
 
 
 @app.route('/config', methods=['GET', 'POST'])
