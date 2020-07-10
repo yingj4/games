@@ -123,6 +123,9 @@ class Game():
         s = ''
         if len(self.votes) == self.max_num:
             s = self.base_msg
+            for i in range(self.quest_idx, 5):
+                s += '[{}*]'.format(self.quests_num[i]) if self.tolerance and i == 3 else '[{}]'.format(self.quests_num[i])
+ 
             res = sum([1 if self.votes[a] else 0 for a in self.votes])
             self.vote_msg = '[{}]'.format('Vote result is PASS' if res > len(self.votes)/2 else 'Vote result is FAIL')
             self.vote_msg += ' | '
@@ -145,7 +148,7 @@ class Game():
             s = self.base_msg
             for i in range(self.quest_idx+1, 5):
                 s += '[{}*]'.format(self.quests_num[i]) if self.tolerance and i == 3 else '[{}]'.format(self.quests_num[i])
-            s += self.vote_msg
+            s += '<br>' + self.vote_msg
 
         self.msg = s
 
